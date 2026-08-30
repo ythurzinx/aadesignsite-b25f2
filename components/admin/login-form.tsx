@@ -3,12 +3,11 @@
 import { FormEvent, useState } from "react";
 import { Loader2, LockKeyhole } from "lucide-react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { Brand } from "@/components/brand";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 
 export function LoginForm() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(searchParams.get("erro") === "sem-permissao" ? "Esta conta não tem permissão administrativa." : "");
@@ -23,17 +22,34 @@ export function LoginForm() {
     setLoading(true);
     setError("");
     const data = new FormData(event.currentTarget);
-    const { error: authError } = await supabase.auth.signInWithPassword({
-      email: String(data.get("email") || ""),
-      password: String(data.get("password") || "")
-    });
-    if (authError) {
-      setError("E-mail ou senha inválidos.");
+    try {
+      const { error: authError } = await supabase.auth.signInWithPassword({
+        email: String(data.get("email") || ""),
+        password: String(data.get("password") || "")
+      });
+      if (authError) {
+        setError("E-mail ou senha inválidos.");
+        setLoading(false);
+        return;
+      }
+
+      const { data: admin, error: permissionError } = await supabase
+        .from("admin_users")
+        .select("id")
+        .maybeSingle();
+
+      if (permissionError || !admin) {
+        await supabase.auth.signOut();
+        setError("Esta conta não tem permissão administrativa.");
+        setLoading(false);
+        return;
+      }
+
+      window.location.assign("/admin");
+    } catch {
+      setError("Não foi possível concluir o acesso. Tente novamente.");
       setLoading(false);
-      return;
     }
-    router.replace("/admin");
-    router.refresh();
   }
 
   return (

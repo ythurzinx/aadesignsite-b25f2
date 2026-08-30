@@ -55,11 +55,12 @@ export function Contact({ settings }: { settings: SiteSettings }) {
 
   return (
     <>
-      <section className="grain relative overflow-hidden bg-[#07152f] py-24 sm:py-32">
-        <div className="absolute -right-28 top-1/2 h-[32rem] w-[32rem] -translate-y-1/2 rounded-full border border-[#35a8ff]/20 shadow-[0_0_160px_rgba(11,102,255,.22)]" />
+      <section className="grain relative overflow-hidden bg-[linear-gradient(135deg,#eef8fc,#ffffff_52%,#edf6ff)] py-24 sm:py-28">
+        <div className="absolute -right-24 top-1/2 h-[35rem] w-[47rem] -translate-y-1/2 opacity-[0.045]" style={{ background: "url('/brand/aa-mark.png') center/contain no-repeat" }} />
+        <div className="absolute -left-24 top-10 h-72 w-72 rounded-full bg-[#20c4e8]/12 blur-3xl" />
         <div className="shell relative z-10 text-center">
-          <p className="text-[0.65rem] font-bold uppercase tracking-[0.22em] text-[#62b8ff]">Pronto para tirar a ideia do papel?</p>
-          <h2 className="display mx-auto mt-7 max-w-6xl text-[clamp(3.5rem,9.5vw,9rem)] font-black uppercase leading-[0.8]">Seu próximo projeto merece ser extraordinário.</h2>
+          <p className="text-[0.68rem] font-bold uppercase tracking-[0.14em] text-[#0077b8]">Pronto para tirar a ideia do papel?</p>
+          <h2 className="display mx-auto mt-7 max-w-5xl text-[clamp(3rem,7vw,6.6rem)] font-bold leading-[0.98] text-[#102a43]">Seu próximo projeto merece ser <span className="text-[#0077b8]">extraordinário.</span></h2>
           <div className="mt-10 flex flex-wrap justify-center gap-3">
             <a href={whatsHref} target={settings.whatsapp ? "_blank" : undefined} rel="noreferrer" className="button-primary"><MessageCircle className="h-4 w-4" /> Falar no WhatsApp</a>
             <a href="#formulario" className="button-ghost">Preencher briefing <ArrowUpRight className="h-4 w-4" /></a>
@@ -68,19 +69,19 @@ export function Contact({ settings }: { settings: SiteSettings }) {
         </div>
       </section>
 
-      <section id="contato" className="section-pad bg-[#f4f5f7] text-[#07152f]">
+      <section id="contato" className="section-pad bg-[#f5f8fb] text-[#102a43]">
         <div className="shell grid gap-12 lg:grid-cols-[.65fr_1.35fr] lg:gap-20">
           <div>
             <span className="eyebrow text-[#0b66ff]">Contato e orçamento</span>
-            <h2 className="display mt-7 text-[clamp(3.5rem,7vw,6.2rem)] font-black uppercase leading-[0.82]">Conte o que você quer criar.</h2>
-            <p className="mt-7 max-w-md text-base leading-7 text-[#5f6c7e]">Quanto mais contexto você enviar, mais precisa será nossa primeira conversa.</p>
+            <h2 className="display mt-7 text-[clamp(3rem,5.8vw,5.3rem)] font-bold leading-[0.98]">Conte o que você quer criar.</h2>
+            <p className="mt-7 max-w-md text-base leading-7 text-[#627d98]">Quanto mais contexto você enviar, mais precisa será nossa primeira conversa.</p>
             <div className="mt-10 space-y-4 text-sm">
-              {settings.email && <a href={`mailto:${settings.email}`} className="flex items-center gap-3 font-bold"><span className="grid h-10 w-10 place-items-center rounded-full bg-white"><Mail className="h-4 w-4 text-[#0b66ff]" /></span>{settings.email}</a>}
-              {settings.whatsapp && <a href={whatsHref} target="_blank" rel="noreferrer" className="flex items-center gap-3 font-bold"><span className="grid h-10 w-10 place-items-center rounded-full bg-white"><MessageCircle className="h-4 w-4 text-[#0b66ff]" /></span>WhatsApp da AA</a>}
+              {settings.email && <a href={`mailto:${settings.email}`} className="flex items-center gap-3 font-bold"><span className="grid h-10 w-10 place-items-center rounded-xl bg-white text-[#0077b8] shadow-sm"><Mail className="h-4 w-4" /></span>{settings.email}</a>}
+              {settings.whatsapp && <a href={whatsHref} target="_blank" rel="noreferrer" className="flex items-center gap-3 font-bold"><span className="grid h-10 w-10 place-items-center rounded-xl bg-white text-[#0077b8] shadow-sm"><MessageCircle className="h-4 w-4" /></span>WhatsApp da AA</a>}
             </div>
           </div>
 
-          <form id="formulario" onSubmit={submit} className="rounded-[1.5rem] bg-white p-5 shadow-[0_30px_90px_-45px_rgba(7,21,47,.25)] sm:p-8" noValidate>
+          <form id="formulario" onSubmit={submit} className="rounded-[1.75rem] border border-[#003b70]/10 bg-white p-5 shadow-[0_30px_80px_-48px_rgba(0,59,112,.4)] sm:p-8" noValidate>
             <div className="grid gap-5 sm:grid-cols-2">
               <label className="text-xs font-bold uppercase tracking-[0.1em]">Nome *<input name="name" className="field mt-2 normal-case tracking-normal" required minLength={2} maxLength={100} autoComplete="name" /></label>
               <label className="text-xs font-bold uppercase tracking-[0.1em]">Empresa<input name="company" className="field mt-2 normal-case tracking-normal" maxLength={120} autoComplete="organization" /></label>
@@ -104,7 +105,7 @@ export function Contact({ settings }: { settings: SiteSettings }) {
       </section>
 
       {settings.whatsapp && (
-        <a href={whatsHref} target="_blank" rel="noreferrer" className="fixed bottom-5 right-5 z-40 grid h-14 w-14 place-items-center rounded-full bg-[#0b66ff] text-white shadow-[0_14px_40px_rgba(11,102,255,.4)] transition-transform hover:scale-105" aria-label="Falar com a AA pelo WhatsApp"><MessageCircle className="h-6 w-6" /></a>
+        <a href={whatsHref} target="_blank" rel="noreferrer" className="fixed bottom-5 right-5 z-40 grid h-14 w-14 place-items-center rounded-full bg-[#0077b8] text-white shadow-[0_14px_40px_rgba(0,119,184,.35)] transition-transform hover:scale-105" aria-label="Falar com a AA pelo WhatsApp"><MessageCircle className="h-6 w-6" /></a>
       )}
     </>
   );

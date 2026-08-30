@@ -14,13 +14,13 @@ export function SectionHeading({
   aside?: ReactNode;
 }) {
   return (
-    <div className="flex flex-col justify-between gap-8 lg:flex-row lg:items-end">
-      <div className="max-w-3xl">
-        <span className={`eyebrow ${light ? "text-white" : "text-[#0b66ff]"}`}>{eyebrow}</span>
-        <h2 className={`display mt-7 text-[clamp(2.7rem,7vw,6.8rem)] font-black uppercase leading-[0.85] ${light ? "text-white" : "text-[#07152f]"}`}>
+    <div className="flex flex-col justify-between gap-10 lg:flex-row lg:items-end">
+      <div className="max-w-4xl">
+        <span className={`eyebrow ${light ? "text-white" : "text-[#0077b8]"}`}>{eyebrow}</span>
+        <h2 className={`display mt-6 text-[clamp(2.7rem,5.7vw,5.5rem)] font-bold leading-[0.98] ${light ? "text-white" : "text-[#102a43]"}`}>
           {title}
         </h2>
-        {copy && <p className={`mt-7 max-w-2xl text-base leading-7 ${light ? "text-white/58" : "text-[#526074]"}`}>{copy}</p>}
+        {copy && <p className={`mt-6 max-w-2xl text-[0.95rem] leading-7 sm:text-base ${light ? "text-white/65" : "text-[#627d98]"}`}>{copy}</p>}
       </div>
       {aside}
     </div>

@@ -6,6 +6,7 @@ import { useState } from "react";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { MEDIA_BUCKET, removeManagedMedia, toMediaReference } from "@/lib/media";
 import type { SiteSettings } from "@/lib/types";
+import { MuxVideoUploader } from "@/components/admin/mux-video-uploader";
 
 type Field = { name: string; label: string; type?: "text" | "textarea" | "url" | "checkbox" | "select" | "file"; options?: string[]; accept?: string };
 export type EditableRow = { id: string; position?: number; visible?: boolean; [key: string]: unknown };
@@ -174,13 +175,24 @@ function SettingsEditor({ initial }: { initial: SiteSettings }) {
     finally { setSaving(false); }
   }
 
+  function muxCreated(uploadId: string) {
+    setSettings((current) => ({ ...current, hero_mux_upload_id: uploadId, hero_mux_status: "waiting" }));
+    void getSupabaseBrowserClient()?.from("site_settings").upsert({ id: "main", hero_mux_upload_id: uploadId, hero_mux_status: "waiting" }, { onConflict: "id" });
+  }
+
+  function muxReady(video: { uploadId: string; assetId: string; playbackId: string; status: "ready" }) {
+    const changes = { hero_mux_upload_id: video.uploadId, hero_mux_asset_id: video.assetId, hero_mux_playback_id: video.playbackId, hero_mux_status: video.status, hero_video_url: null };
+    setSettings((current) => ({ ...current, ...changes }));
+  }
+
   return (
     <section className="rounded-2xl bg-[#07152f] p-5 text-white sm:p-7">
       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center"><div><p className="text-xs font-black uppercase tracking-[0.15em] text-[#62b8ff]">Identidade e contatos</p><h2 className="display mt-2 text-3xl font-black uppercase">Configurações gerais</h2></div><button type="button" onClick={save} className="button-primary">{saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}Salvar tudo</button></div>
       {message && <p className="mt-4 rounded-lg bg-white/8 p-3 text-sm" aria-live="polite">{message}</p>}
       <div className="mt-7 grid gap-4 sm:grid-cols-2">
         <label className="flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-dashed border-white/20 p-4 text-xs font-bold"><Upload className="h-4 w-4 text-[#62b8ff]" />Enviar logotipo oficial<input type="file" accept="image/png,image/svg+xml,image/webp" className="sr-only" onChange={(event) => event.target.files?.[0] && uploadSetting(event.target.files[0], "logo_url")} /></label>
-        <label className="flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-dashed border-white/20 p-4 text-xs font-bold"><Upload className="h-4 w-4 text-[#62b8ff]" />Enviar showreel<input type="file" accept="video/mp4,video/webm,video/quicktime" className="sr-only" onChange={(event) => event.target.files?.[0] && uploadSetting(event.target.files[0], "hero_video_url")} /></label>
+        <div className="sm:col-span-2 rounded-2xl bg-white p-2 text-[#07152f]"><MuxVideoUploader label="Enviar showreel em até 4K" currentUploadId={settings.hero_mux_upload_id} currentPlaybackId={settings.hero_mux_playback_id} currentStatus={settings.hero_mux_status} onCreated={(video) => muxCreated(video.uploadId)} onReady={muxReady} /></div>
+        <details className="sm:col-span-2"><summary className="cursor-pointer text-xs font-bold text-white/55">Usar upload antigo de até 250 MB</summary><label className="mt-3 flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-dashed border-white/20 p-4 text-xs font-bold"><Upload className="h-4 w-4 text-[#62b8ff]" />Enviar no Supabase<input type="file" accept="video/mp4,video/webm,video/quicktime" className="sr-only" onChange={(event) => event.target.files?.[0] && uploadSetting(event.target.files[0], "hero_video_url")} /></label></details>
         {fields.map((field) => <label key={field.key} className={`text-xs font-bold text-white/62 ${field.type === "textarea" ? "sm:col-span-2" : ""}`}>{field.label}{field.type === "textarea" ? <textarea className="field mt-2 min-h-24" value={String(settings[field.key] ?? "")} onChange={(event) => setSettings((current) => ({ ...current, [field.key]: event.target.value }))} /> : <input type="text" className="field mt-2" value={String(settings[field.key] ?? "")} onChange={(event) => setSettings((current) => ({ ...current, [field.key]: event.target.value }))} />}</label>)}
       </div>
     </section>

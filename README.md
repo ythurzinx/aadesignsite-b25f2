@@ -1,77 +1,122 @@
 # AA Design & Media
 
-Site oficial da produtora, construído com Next.js App Router, React, TypeScript, Tailwind CSS, Framer Motion e Supabase. O projeto foi preparado para Vercel, com página pública completa, portfólio multimídia e painel administrativo real em `/admin`.
+Site público e painel operacional da produtora, com portfólio, fotografias, agenda, financeiro, briefing assistido e vídeo 4K via Mux.
 
-## O que está pronto
+## Configuração do projeto
 
-- Hero cinematográfico com vídeo sob demanda, poster e fallback sem mídia quebrada.
-- Portfólio com filtros, formatos 16:9, 9:16 e 1:1, preview no hover, modal, galeria, compartilhamento e páginas individuais.
-- Serviços, apresentação da equipe, equipamentos, processo, bastidores, clientes e depoimentos condicionais.
-- Formulário de orçamento validado, honeypot, limite de tentativas e armazenamento server-side.
-- Painel protegido com projetos, rascunho/publicação, ordenação, upload, crop/ponto focal, conteúdo geral e gestão de contatos.
-- Supabase Auth, Database, Storage e RLS com políticas de menor privilégio.
-- Metadata, Open Graph, sitemap, robots.txt, PWA manifest e dados estruturados locais.
-- Responsividade, navegação por teclado e `prefers-reduced-motion`.
+1. Copie `.env.example` para `.env.local` e conecte o Supabase.
+2. Execute `supabase/schema.sql` no SQL Editor do Supabase.
+3. Cadastre o primeiro usuário em `auth.users` e inclua seu `id` em `public.admin_users`.
+4. Para vídeo 4K, crie um Access Token no Mux com permissão de vídeo e configure `MUX_TOKEN_ID` e `MUX_TOKEN_SECRET` apenas no servidor.
+5. Para o briefing criativo, configure `OPENAI_API_KEY`. Sem essa chave, a tela continua gerando um briefing estruturado localmente.
+6. Somente se a aplicação estiver atrás de uma Cloudflare que sobrescreva cabeçalhos do cliente, configure `TRUSTED_PROXY_IP_HEADER=cf-connecting-ip`. Em outra hospedagem, use apenas o cabeçalho autenticado pelo respectivo proxy.
 
-## Desenvolvimento local
+Os uploads grandes vão diretamente do navegador para o Mux em partes retomáveis; as credenciais nunca chegam ao cliente. O player permanece embutido no site com áudio e resolução adaptativa.
 
-Requisitos: Node.js 22 ou superior e npm.
+## Desenvolvimento
 
-```bash
-npm install
-cp .env.example .env.local
-npm run dev
+A clean full-stack starter running on
+[vinext](https://github.com/cloudflare/vinext), with optional Cloudflare D1 and
+Drizzle support.
+
+## Prerequisites
+
+- Node.js `>=22.13.0`
+- Linux with `flock`, `curl`, and GNU `timeout`
+
+## Sites Lifecycle
+
+The Sites lifecycle CLI runs the locked dependency install before returning this checkout. Edit the source under `app/`, then checkpoint when a coherent milestone is ready to inspect or share. The remote Sites builder runs `npm run build` against the pushed commit. Do not repeat install or build as a normal pre-checkpoint step.
+
+This starter does not use `wrangler.jsonc`.
+
+`install:ci` is intentionally a single, non-retrying `npm ci`. It refuses a concurrent install for the same project, consumes a matching image-seeded npm cache with `--prefer-offline` while retaining registry fallback for a missing cache object, otherwise downloads and verifies the complete vinext tarball recorded in `package-lock.json`, limits npm to one socket, and terminates a stalled install. `build` applies a short timeout. These helpers target Linux and use GNU `timeout`; they are not native macOS scripts.
+
+Scripts that need writable project-scoped home, npm, XDG, and temporary paths use `scripts/sites-env.sh`. The `dev` and `start` scripts honor the caller's runtime environment and keep Wrangler logs inside the checkout. The generated `.sites-runtime/` directory is disposable and ignored by Git.
+
+## Included Shape
+
+- edit site code under `app/`
+- `app/chatgpt-auth.ts` provides optional dispatch-owned ChatGPT sign-in helpers
+- `.openai/hosting.json` declares optional Sites D1 and R2 bindings
+- `vite.config.ts` simulates declared bindings for local development
+- `db/index.ts` reads the D1 binding from the Cloudflare Worker environment
+- `db/schema.ts` starts intentionally empty
+- `examples/d1/` contains an optional D1 example surface
+- `drizzle.config.ts` supports local migration generation when needed
+
+## Workspace Auth Headers
+
+OpenAI workspace sites can read the current user's email from
+`oai-authenticated-user-email`.
+
+SIWC-authenticated workspace sites may also receive
+`oai-authenticated-user-full-name` when the user's SIWC profile has a non-empty
+`name` claim. The full-name value is percent-encoded UTF-8 and is accompanied by
+`oai-authenticated-user-full-name-encoding: percent-encoded-utf-8`.
+
+Treat the full name as optional and fall back to email when it is absent:
+
+```tsx
+import { headers } from "next/headers";
+
+export default async function Home() {
+  const requestHeaders = await headers();
+  const email = requestHeaders.get("oai-authenticated-user-email");
+  const encodedFullName = requestHeaders.get("oai-authenticated-user-full-name");
+  const fullName =
+    encodedFullName &&
+    requestHeaders.get("oai-authenticated-user-full-name-encoding") ===
+      "percent-encoded-utf-8"
+      ? decodeURIComponent(encodedFullName)
+      : null;
+
+  const displayName = fullName ?? email;
+  // ...
+}
 ```
 
-O site abre em `http://localhost:3000`. Sem Supabase configurado, a página pública usa dados de demonstração reais da operação e placeholders de mídia; o painel permanece bloqueado.
+## Optional Dispatch-Owned ChatGPT Sign-In
 
-## Configurar o Supabase
+Import the ready-to-use helpers from `app/chatgpt-auth.ts` when the site needs
+optional or required ChatGPT sign-in:
 
-1. Crie um projeto no Supabase.
-2. Abra o SQL Editor e execute [`supabase/schema.sql`](supabase/schema.sql) por inteiro.
-3. Em Authentication > Users, crie o usuário administrador.
-4. Copie o UUID do usuário e execute:
+- Use `getChatGPTUser()` for optional signed-in UI.
+- Use `requireChatGPTUser(returnTo)` for server-rendered pages that should send
+  anonymous visitors through Sign in with ChatGPT.
+- Use `chatGPTSignInPath(returnTo)` and `chatGPTSignOutPath(returnTo)` for
+  browser links or actions.
+- Pass a same-origin relative `returnTo` path for the destination after sign-in
+  or sign-out. The helper validates and safely encodes it.
+- Mark protected pages with `export const dynamic = "force-dynamic"` because
+  they depend on per-request identity headers.
 
-```sql
-insert into public.admin_users (id) values ('UUID-DO-USUARIO');
-```
+Dispatch owns `/signin-with-chatgpt`, `/signout-with-chatgpt`, `/callback`, the
+OAuth cookies, and identity header injection. Do not implement app routes for
+those reserved paths. Routes that do not import and call the helper remain
+anonymous-compatible.
 
-5. Preencha `.env.local` com a URL, a chave pública `anon` e a `service_role`.
-6. Nunca exponha `SUPABASE_SERVICE_ROLE_KEY` no navegador nem a prefixe com `NEXT_PUBLIC_`.
-7. Entre em `/admin/login` e envie o logotipo oficial, o showreel, as capas e as fotos.
+SIWC establishes identity only; it does not prove workspace membership. Use the
+Sites hosting platform's access policy controls for workspace-wide restrictions,
+or enforce explicit server-side membership or allowlist checks.
 
-O bucket privado `media` aceita JPEG, PNG, WebP, AVIF, SVG, MP4, WebM e QuickTime, com limite de 250 MB por arquivo. Somente administradores podem ler ou escrever objetos diretamente; o site público recebe URLs assinadas de curta duração apenas para conteúdo publicado ou visível.
+Use SIWC for account pages, user-specific dashboards, saved records, and write
+actions tied to the current ChatGPT user. Leave public content anonymous.
 
-## Variáveis
+## Diagnostic Commands
 
-| Variável | Onde usar | Obrigatória |
-|---|---|---|
-| `NEXT_PUBLIC_SITE_URL` | URL canônica e validação do formulário | Sim em produção |
-| `NEXT_PUBLIC_SUPABASE_URL` | Cliente Supabase | Sim |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Chave pública protegida por RLS | Sim |
-| `SUPABASE_SERVICE_ROLE_KEY` | URLs assinadas e RPC server-side de contatos | Sim |
-| `CONTACT_RATE_LIMIT_SALT` | Segredo separado para anonimizar IPs no rate limit | Recomendado |
-| `TRUSTED_PROXY_IP_HEADER` | Header de IP do proxy confiável fora da Vercel | Somente self-hosted |
-| `NEXT_PUBLIC_WHATSAPP_NUMBER` | Fallback do botão, com DDI | Recomendado |
-| `NEXT_PUBLIC_INSTAGRAM_URL` | Fallback do Instagram | Recomendado |
-| `CONTACT_NOTIFICATION_EMAIL` | Reservada para integração de e-mail | Opcional |
+- `npm run install:ci`: perform the one bounded lockfile install
+- `npm run dev`: start the Vite/Vinext development server
+- `npm run build`: build the deployable Sites artifact
+- `npm run start`: start the built Vinext application
+- `npm test`: build and verify the rendered development-preview metadata
+- `npm run db:generate`: generate Drizzle migrations after schema changes
 
-## Verificações
+Use build commands for targeted diagnosis after a remote failure, not as part of the normal checkpoint path.
 
-```bash
-npm run typecheck
-npm run lint
-npm run build
-```
+The timeout defaults can be overridden for a controlled canary with `SITES_INSTALL_TIMEOUT`, `SITES_INSTALL_KILL_AFTER`, `SITES_BUILD_TIMEOUT`, and `SITES_BUILD_KILL_AFTER`. A timeout fails the command; the helpers never retry an unchanged install or build.
 
-## Deploy na Vercel
+## Learn More
 
-1. Importe o repositório na Vercel.
-2. Cadastre as mesmas variáveis em Project Settings > Environment Variables.
-3. Defina `NEXT_PUBLIC_SITE_URL` com o domínio definitivo, incluindo `https://`.
-4. Faça o deploy. O preset Next.js é detectado automaticamente.
-5. Depois de apontar o domínio, atualize o Site URL e Redirect URLs no Supabase Authentication.
-
-## Mídias e identidade
-
-O repositório anterior não continha arquivos de vídeo, fotografias ou o arquivo oficial do símbolo azul. Por isso o layout usa placeholders identificados, sem inventar trabalhos, prêmios ou depoimentos. O upload do logo pelo painel não redesenha o arquivo: ele apenas o exibe preservando sua proporção.
+- [vinext Documentation](https://github.com/cloudflare/vinext)
+- [Drizzle D1 Guide](https://orm.drizzle.team/docs/get-started/d1-new)

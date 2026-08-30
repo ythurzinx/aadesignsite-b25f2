@@ -1,6 +1,6 @@
 "use client";
 
-import { FolderKanban, Inbox, LayoutDashboard, LogOut, Menu, PanelTop, Settings2, X } from "lucide-react";
+import { Bot, CalendarRange, FolderKanban, Images, Inbox, LayoutDashboard, LogOut, Menu, PanelTop, Settings2, WalletCards, X } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import { Brand } from "@/components/brand";
@@ -9,6 +9,10 @@ import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 const links = [
   ["/admin", "Visão geral", LayoutDashboard],
   ["/admin/projetos", "Projetos", FolderKanban],
+  ["/admin/fotografias", "Fotografias", Images],
+  ["/admin/agenda", "Agenda & eventos", CalendarRange],
+  ["/admin/financeiro", "Financeiro", WalletCards],
+  ["/admin/briefing-ia", "Briefing com IA", Bot],
   ["/admin/conteudo", "Conteúdo", Settings2],
   ["/admin/contatos", "Contatos", Inbox]
 ] as const;
